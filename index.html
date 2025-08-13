@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .game-board {
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .cell {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            color: white;
+        }
+
+        .cell:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .cell.taken {
+            cursor: not-allowed;
+        }
+        
+        .cell.taken:hover {
+            transform: none;
+        }
+
+        .x-mark {
+            color: #ff5722; /* Neon orange-red */
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(255, 87, 34, 0.8);
+        }
+
+        .o-mark {
+            color: #00e5ff; /* Neon cyan */
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.8);
+        }
+
+        .winner-line {
+            position: absolute;
+            background: #ffd700; /* Gold */
+            border-radius: 4px;
+            z-index: 10;
+            animation: drawLine 0.5s ease-out;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+        }
+
+        @keyframes drawLine {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .bounce-in {
+            animation: bounceIn 0.6s ease-out;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #ff5722 0%, #00e5ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .score-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        #gameStatus {
+            color: white;
+        }
+
+        button {
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            filter: brightness(1.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center p-4">
+    <div class="bg-gray-900 rounded-3xl shadow-2xl p-8 w-full max-w-md border border-gray-800">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold gradient-text mb-2">Tic Tac Toe</h1>
+            <p class="text-gray-400">Challenge your friend!</p>
+        </div>
+        
+        <!-- Score Board -->
+        <div class="flex justify-between mb-6">
+            <div class="score-card rounded-xl p-4 text-center flex-1 mr-2">
+                <div class="text-2xl font-bold x-mark">X</div>
+                <div class="text-sm text-gray-400">Player 1</div>
+                <div id="scoreX" class="text-xl font-semibold">0</div>
+            </div>
+            <div class="score-card rounded-xl p-4 text-center flex-1 mx-2">
+                <div class="text-lg font-semibold text-gray-400">Ties</div>
+                <div id="scoreTie" class="text-xl font-semibold">0</div>
+            </div>
+            <div class="score-card rounded-xl p-4 text-center flex-1 ml-2">
+                <div class="text-2xl font-bold o-mark">O</div>
+                <div class="text-sm text-gray-400">Player 2</div>
+                <div id="scoreO" class="text-xl font-semibold">0</div>
+            </div>
+        </div>
+        
+        <!-- Current Player Indicator -->
+        <div class="text-center mb-6">
+            <div id="currentPlayer" class="text-xl font-semibold text-gray-300">
+                Current Player: <span id="playerTurn" class="x-mark">X</span>
+            </div>
+        </div>
+        
+        <!-- Game Board -->
+        <div class="game-board rounded-2xl p-6 mb-6">
+            <div id="gameBoard" class="grid grid-cols-3 gap-3 relative">
+                <div class="cell rounded-xl h-20 flex items-center justify-center text-4xl font-bold" data-index="0"></div>
+                <div class="cell rounded-xl h-20 flex items-center justify-center text-4xl font-bold" data-index="1"></div>
+                <div class="cell rounded-xl h-20 flex items-center justify-center text-4xl font-bold" data-index="2"></div>
+                <div class="cell rounded-xl h-20 flex items-center justify-center text-4xl font-bold" data-index="3"></div>
+                <div class="cell rounded-xl h-20 flex items-center justify-center text-4xl font-bold" data-index="4"></div>
+                <div class="cell rounded-xl h-20 flex items-center justify-center text-4xl font-bold" data-index="5"></div>
+                <div class="cell rounded-xl h-20 flex items-center justify-center text-4xl font-bold" data-index="6"></div>
+                <div class="cell rounded-xl h-20 flex items-center justify-center text-4xl font-bold" data-index="7"></div>
+                <div class="cell rounded-xl h-20 flex items-center justify-center text-4xl font-bold" data-index="8"></div>
+            </div>
+        </div>
+        
+        <!-- Game Status -->
+        <div id="gameStatus" class="text-center mb-6 min-h-[2rem]">
+            <div class="text-lg font-semibold">Make your move!</div>
+        </div>
+        
+        <!-- Control Buttons -->
+        <div class="flex space-x-4">
+            <button onclick="resetGame()" class="flex-1 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold py-3 rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 transform hover:scale-105 shadow-lg">
+                New Game
+            </button>
+            <button onclick="resetScore()" class="flex-1 bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold py-3 rounded-xl hover:from-red-600 hover:to-orange-600 transition-all duration-300 transform hover:scale-105 shadow-lg">
+                Reset Score
+            </button>
+        </div>
+        
+        <!-- Game Stats -->
+        <div class="mt-6 text-center text-sm text-gray-500">
+            <div>Games Played: <span id="gamesPlayed">0</span></div>
+        </div>
+    </div>
+
+    <script>
+        let board = ['', '', '', '', '', '', '', '', ''];
+        let currentPlayer = 'X';
+        let gameActive = true;
+        let scores = { X: 0, O: 0, tie: 0 };
+        let gamesPlayed = 0;
+        
+        const cells = document.querySelectorAll('.cell');
+        const gameStatus = document.getElementById('gameStatus');
+        const playerTurn = document.getElementById('playerTurn');
+        const scoreX = document.getElementById('scoreX');
+        const scoreO = document.getElementById('scoreO');
+        const scoreTie = document.getElementById('scoreTie');
+        const gamesPlayedElement = document.getElementById('gamesPlayed');
+        
+        const winningConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+        
+        function initializeGame() {
+            cells.forEach((cell, index) => {
+                cell.addEventListener('click', () => handleCellClick(index));
+            });
+            updateDisplay();
+        }
+        
+        function handleCellClick(index) {
+            if (board[index] !== '' || !gameActive) return;
+            
+            board[index] = currentPlayer;
+            const cell = cells[index];
+            cell.textContent = currentPlayer;
+            cell.classList.add('taken', 'bounce-in');
+            cell.classList.add(currentPlayer === 'X' ? 'x-mark' : 'o-mark');
+            
+            if (checkWin()) {
+                handleGameEnd(`Player ${currentPlayer} wins! 🎉`);
+                scores[currentPlayer]++;
+                drawWinningLine();
+            } else if (board.every(cell => cell !== '')) {
+                handleGameEnd("It's a tie! 🤝");
+                scores.tie++;
+            } else {
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                updatePlayerTurn();
+                gameStatus.innerHTML = `<div class="text-lg font-semibold">Player ${currentPlayer}'s turn</div>`;
+            }
+            
+            updateScoreDisplay();
+        }
+        
+        function checkWin() {
+            return winningConditions.some(condition => {
+                const [a, b, c] = condition;
+                return board[a] && board[a] === board[b] && board[a] === board[c];
+            });
+        }
+        
+        function drawWinningLine() {
+            const winningCondition = winningConditions.find(condition => {
+                const [a, b, c] = condition;
+                return board[a] && board[a] === board[b] && board[a] === board[c];
+            });
+            
+            if (winningCondition) {
+                const [a, , c] = winningCondition;
+                const gameBoard = document.getElementById('gameBoard');
+                const line = document.createElement('div');
+                line.className = 'winner-line';
+                
+                const positions = [
+                    [40, 40], [124, 40], [208, 40],
+                    [40, 124], [124, 124], [208, 124],
+                    [40, 208], [124, 208], [208, 208]
+                ];
+                
+                const startPos = positions[a];
+                const endPos = positions[c];
+                
+                const centerX = (startPos[0] + endPos[0]) / 2;
+                const centerY = (startPos[1] + endPos[1]) / 2;
+                const length = Math.sqrt(Math.pow(endPos[0] - startPos[0], 2) + Math.pow(endPos[1] - startPos[1], 2));
+                const angle = Math.atan2(endPos[1] - startPos[1], endPos[0] - startPos[0]) * 180 / Math.PI;
+                
+                line.style.width = `${length}px`;
+                line.style.height = '4px';
+                line.style.left = `${centerX - length/2}px`;
+                line.style.top = `${centerY - 2}px`;
+                line.style.transform = `rotate(${angle}deg)`;
+                
+                gameBoard.appendChild(line);
+                
+                winningCondition.forEach(index => {
+                    cells[index].classList.add('pulse');
+                });
+            }
+        }
+        
+        function handleGameEnd(message) {
+            gameActive = false;
+            gamesPlayed++;
+            gameStatus.innerHTML = `<div class="text-xl font-bold text-green-400">${message}</div>`;
+            gamesPlayedElement.textContent = gamesPlayed;
+            setTimeout(() => {
+                gameStatus.innerHTML += '<div class="text-sm text-gray-400 mt-2">Click "New Game" to play again!</div>';
+            }, 1000);
+        }
+        
+        function updateScoreDisplay() {
+            scoreX.textContent = scores.X;
+            scoreO.textContent = scores.O;
+            scoreTie.textContent = scores.tie;
+        }
+        
+        function updatePlayerTurn() {
+            playerTurn.textContent = currentPlayer;
+            playerTurn.className = currentPlayer === 'X' ? 'x-mark' : 'o-mark';
+        }
+        
+        function resetGame() {
+            board = ['', '', '', '', '', '', '', '', ''];
+            gameActive = true;
+            currentPlayer = 'X';
+            updatePlayerTurn();
+            gameStatus.innerHTML = `<div class="text-lg font-semibold">Make your move!</div>`;
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.classList.remove('taken', 'x-mark', 'o-mark', 'pulse', 'bounce-in');
+            });
+            const line = document.querySelector('.winner-line');
+            if (line) line.remove();
+        }
+        
+        function resetScore() {
+            scores = { X: 0, O: 0, tie: 0 };
+            gamesPlayed = 0;
+            updateScoreDisplay();
+            gamesPlayedElement.textContent = gamesPlayed;
+            resetGame();
+        }
+        
+        function updateDisplay() {
+            updateScoreDisplay();
+            updatePlayerTurn();
+        }
+        
+        initializeGame();
+    </script>
+</body>
+</html>
